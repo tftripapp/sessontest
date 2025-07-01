@@ -2,6 +2,8 @@ from flask import Flask, request, render_template_string, send_file
 import tempfile
 import os
 from faster_whisper import WhisperModel
+from io import BytesIO
+from docx import Document
 
 app = Flask(__name__)
 
@@ -13,34 +15,49 @@ HTML = '''
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Türkçe Ses/Video'dan Metne Çeviri</title>
+    <title>Ses/Video Metne Dönüştürücü</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        :root {
+            --main-blue: #0033a0;
+            --white: #ffffff;
+        }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
-            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+            background: var(--white);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
         header {
-            background: #2563eb;
-            color: #fff;
-            padding: 32px 0 18px 0;
-            text-align: center;
-            font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            box-shadow: 0 2px 8px #0001;
+            background: var(--main-blue);
+            color: var(--white);
+            padding: 18px 36px 12px 36px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-align: left;
         }
         .container {
-            background: #fff;
-            padding: 32px 24px 24px 24px;
+            background: var(--white);
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            padding: 40px 0 32px 0;
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .form-box {
+            width: 100%;
+            max-width: 520px;
+            background: #f4f7fb;
             border-radius: 14px;
-            max-width: 420px;
-            margin: 40px auto 24px auto;
-            box-shadow: 0 4px 24px #0002;
+            box-shadow: 0 4px 24px #0033a01a;
+            padding: 32px 24px 24px 24px;
             display: flex;
             flex-direction: column;
             gap: 18px;
@@ -57,8 +74,8 @@ HTML = '''
             background: #f3f4f6;
         }
         button {
-            background: #2563eb;
-            color: #fff;
+            background: var(--main-blue);
+            color: var(--white);
             border: none;
             border-radius: 6px;
             padding: 12px 0;
@@ -69,7 +86,7 @@ HTML = '''
             margin-top: 4px;
         }
         button:hover {
-            background: #1d4ed8;
+            background: #002266;
         }
         textarea {
             width: 100%;
@@ -84,7 +101,9 @@ HTML = '''
         }
         .download {
             margin-top: 10px;
-            text-align: right;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
         }
         .error {
             color: #dc2626;
@@ -94,61 +113,58 @@ HTML = '''
             border-radius: 6px;
             margin-top: 8px;
         }
-        @media (max-width: 600px) {
-            .container {
+        @media (max-width: 700px) {
+            .form-box {
                 max-width: 98vw;
-                margin: 16px 1vw 16px 1vw;
-                padding: 18px 6vw 18px 6vw;
+                padding: 18px 2vw 18px 2vw;
             }
             header {
-                font-size: 1.3rem;
-                padding: 18px 0 10px 0;
+                font-size: 1.1rem;
+                padding: 12px 10px 8px 10px;
             }
         }
         footer {
             margin-top: auto;
-            background: #f1f5f9;
-            color: #64748b;
+            background: var(--main-blue);
+            color: var(--white);
             text-align: center;
             padding: 18px 0 12px 0;
             font-size: 1rem;
             letter-spacing: 0.2px;
         }
-        .footer-link {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .footer-link:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
     <header>
-        Türkçe Ses/Video'dan Metne Çeviri
+        Ses/Video Metne Dönüştürücü
     </header>
     <div class="container">
-        <form method="post" enctype="multipart/form-data">
-            <label for="file"><b>Ses veya video dosyası yükle:</b></label>
-            <input type="file" name="file" id="file" accept="audio/*,video/*" required>
-            <button type="submit">Yükle ve Çevir</button>
-        </form>
-        {% if text %}
-            <label for="transcript"><b>Çıktı (Türkçe Transkript):</b></label>
-            <textarea id="transcript" readonly>{{ text }}</textarea>
-            <div class="download">
-                <form method="post" action="/download">
-                    <input type="hidden" name="text" value="{{ text|tojson|safe }}">
-                    <button type="submit">Metni İndir</button>
-                </form>
-            </div>
-        {% elif error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+        <div class="form-box">
+            <form method="post" enctype="multipart/form-data">
+                <label for="file"><b>Ses veya video dosyası yükle:</b></label>
+                <input type="file" name="file" id="file" accept="audio/*,video/*" required>
+                <button type="submit">Yükle ve Çevir</button>
+            </form>
+            {% if text %}
+                <label for="transcript"><b>Çıktı (Türkçe Transkript):</b></label>
+                <textarea id="transcript" readonly>{{ text }}</textarea>
+                <div class="download">
+                    <form method="post" action="/download-txt" style="display:inline;">
+                        <input type="hidden" name="text" value="{{ text|tojson|safe }}">
+                        <button type="submit">Metni TXT İndir</button>
+                    </form>
+                    <form method="post" action="/download-docx" style="display:inline;">
+                        <input type="hidden" name="text" value="{{ text|tojson|safe }}">
+                        <button type="submit">Metni Word İndir</button>
+                    </form>
+                </div>
+            {% elif error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+        </div>
     </div>
     <footer>
-        &copy; 2024 Türkçe Transkript &middot; <a class="footer-link" href="https://railway.app/" target="_blank">Railway ile Barındırıldı</a>
+        2025 Tüm Hakları Sakldıır İnnosa Yazılım Teknoloji
     </footer>
 </body>
 </html>
@@ -173,13 +189,23 @@ def index():
                 error = f'Hata: {str(e)}'
     return render_template_string(HTML, text=text, error=error)
 
-@app.route('/download', methods=['POST'])
-def download():
+@app.route('/download-txt', methods=['POST'])
+def download_txt():
     text = request.form.get('text', '')
     with tempfile.NamedTemporaryFile(delete=False, suffix='.txt', mode='w', encoding='utf-8') as tmp:
         tmp.write(text)
         tmp.flush()
         return send_file(tmp.name, as_attachment=True, download_name='transkript.txt', mimetype='text/plain')
+
+@app.route('/download-docx', methods=['POST'])
+def download_docx():
+    text = request.form.get('text', '')
+    doc = Document()
+    doc.add_paragraph(text)
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return send_file(buf, as_attachment=True, download_name='transkript.docx', mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 
 if __name__ == '__main__':
     import os
