@@ -2,8 +2,8 @@ from flask import Flask, request, render_template_string, send_file
 import tempfile
 import os
 from faster_whisper import WhisperModel
-from io import BytesIO
-from docx import Document
+# from io import BytesIO
+# from docx import Document
 
 app = Flask(__name__)
 
@@ -153,10 +153,6 @@ HTML = '''
                         <input type="hidden" name="text" value="{{ text|tojson|safe }}">
                         <button type="submit">Metni TXT İndir</button>
                     </form>
-                    <form method="post" action="/download-docx" style="display:inline;">
-                        <input type="hidden" name="text" value="{{ text|tojson|safe }}">
-                        <button type="submit">Metni Word İndir</button>
-                    </form>
                 </div>
             {% elif error %}
                 <div class="error">{{ error }}</div>
@@ -196,16 +192,6 @@ def download_txt():
         tmp.write(text)
         tmp.flush()
         return send_file(tmp.name, as_attachment=True, download_name='transkript.txt', mimetype='text/plain')
-
-@app.route('/download-docx', methods=['POST'])
-def download_docx():
-    text = request.form.get('text', '')
-    doc = Document()
-    doc.add_paragraph(text)
-    buf = BytesIO()
-    doc.save(buf)
-    buf.seek(0)
-    return send_file(buf, as_attachment=True, download_name='transkript.docx', mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 
 if __name__ == '__main__':
     import os
