@@ -20,117 +20,127 @@ HTML = '''
     <style>
         :root {
             --main-blue: #0033a0;
+            --accent-blue: #4f8cff;
             --white: #ffffff;
+            --panel-shadow: 0 8px 32px #0033a033;
         }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
-            background: var(--white);
             min-height: 100vh;
+            background: linear-gradient(120deg, var(--main-blue) 0%, var(--accent-blue) 100%);
             display: flex;
             flex-direction: column;
         }
         header {
-            background: var(--main-blue);
+            background: transparent;
             color: var(--white);
-            padding: 18px 36px 12px 36px;
-            font-size: 1.3rem;
-            font-weight: 600;
+            padding: 36px 0 0 0;
+            font-size: 2.1rem;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            text-align: left;
+            text-align: center;
+            text-shadow: 0 2px 12px #0033a055;
         }
-        .container {
+        .panel {
             background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--panel-shadow);
+            padding: 48px 32px 36px 32px;
+            max-width: 480px;
             width: 100%;
-            max-width: 100vw;
-            margin: 0;
-            padding: 40px 0 32px 0;
-            min-height: 70vh;
+            margin: 48px auto 32px auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
+            gap: 22px;
         }
-        .form-box {
-            width: 100%;
-            max-width: 520px;
-            background: #f4f7fb;
-            border-radius: 14px;
-            box-shadow: 0 4px 24px #0033a01a;
-            padding: 32px 24px 24px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
+        label {
+            font-weight: 600;
+            color: #0033a0;
+            margin-bottom: 6px;
         }
         form {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
         input[type=file] {
-            padding: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            background: #f3f4f6;
+            padding: 10px;
+            border: 1.5px solid #e0e7ef;
+            border-radius: 10px;
+            background: #f7faff;
+            font-size: 1rem;
+            transition: border 0.2s;
+        }
+        input[type=file]:focus, input[type=file]:hover {
+            border: 1.5px solid var(--accent-blue);
         }
         button {
-            background: var(--main-blue);
+            background: linear-gradient(90deg, var(--main-blue) 60%, var(--accent-blue) 100%);
             color: var(--white);
             border: none;
-            border-radius: 6px;
-            padding: 12px 0;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 12px;
+            padding: 16px 0;
+            font-size: 1.15rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 4px;
+            box-shadow: 0 2px 8px #0033a022;
+            transition: background 0.2s, transform 0.1s;
         }
         button:hover {
-            background: #002266;
+            background: linear-gradient(90deg, #002266 60%, #4f8cff 100%);
+            transform: translateY(-2px) scale(1.03);
         }
         textarea {
             width: 100%;
             height: 180px;
             margin-top: 8px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            background: #f9fafb;
-            font-size: 1rem;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1.5px solid #e0e7ef;
+            background: #f7faff;
+            font-size: 1.08rem;
             resize: vertical;
+            transition: border 0.2s;
+        }
+        textarea:focus, textarea:hover {
+            border: 1.5px solid var(--accent-blue);
         }
         .download {
             margin-top: 10px;
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: flex-end;
         }
         .error {
             color: #dc2626;
             background: #fee2e2;
-            border: 1px solid #fecaca;
-            padding: 10px;
-            border-radius: 6px;
+            border: 1.5px solid #fecaca;
+            padding: 12px;
+            border-radius: 10px;
             margin-top: 8px;
+            font-size: 1.08rem;
         }
         @media (max-width: 700px) {
-            .form-box {
+            .panel {
                 max-width: 98vw;
                 padding: 18px 2vw 18px 2vw;
+                margin: 18px 0 18px 0;
             }
             header {
-                font-size: 1.1rem;
-                padding: 12px 10px 8px 10px;
+                font-size: 1.2rem;
+                padding: 18px 0 0 0;
             }
         }
         footer {
             margin-top: auto;
-            background: var(--main-blue);
+            background: transparent;
             color: var(--white);
             text-align: center;
-            padding: 18px 0 12px 0;
-            font-size: 1rem;
+            padding: 24px 0 18px 0;
+            font-size: 1.08rem;
             letter-spacing: 0.2px;
+            text-shadow: 0 2px 12px #0033a055;
         }
     </style>
 </head>
@@ -138,26 +148,24 @@ HTML = '''
     <header>
         Ses/Video Metne Dönüştürücü
     </header>
-    <div class="container">
-        <div class="form-box">
-            <form method="post" enctype="multipart/form-data">
-                <label for="file"><b>Ses veya video dosyası yükle:</b></label>
-                <input type="file" name="file" id="file" accept="audio/*,video/*" required>
-                <button type="submit">Yükle ve Çevir</button>
-            </form>
-            {% if text %}
-                <label for="transcript"><b>Çıktı (Türkçe Transkript):</b></label>
-                <textarea id="transcript" readonly>{{ text }}</textarea>
-                <div class="download">
-                    <form method="post" action="/download-txt" style="display:inline;">
-                        <input type="hidden" name="text" value="{{ text|tojson|safe }}">
-                        <button type="submit">Metni TXT İndir</button>
-                    </form>
-                </div>
-            {% elif error %}
-                <div class="error">{{ error }}</div>
-            {% endif %}
-        </div>
+    <div class="panel">
+        <form method="post" enctype="multipart/form-data">
+            <label for="file">Ses veya video dosyası yükle:</label>
+            <input type="file" name="file" id="file" accept="audio/*,video/*" required>
+            <button type="submit">Yükle ve Çevir</button>
+        </form>
+        {% if text %}
+            <label for="transcript">Çıktı (Türkçe Transkript):</label>
+            <textarea id="transcript" readonly>{{ text }}</textarea>
+            <div class="download">
+                <form method="post" action="/download-txt" style="display:inline;">
+                    <input type="hidden" name="text" value="{{ text|tojson|safe }}">
+                    <button type="submit">Metni TXT İndir</button>
+                </form>
+            </div>
+        {% elif error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
     </div>
     <footer>
         2025 Tüm Hakları Sakldıır İnnosa Yazılım Teknoloji
