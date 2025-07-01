@@ -14,34 +14,142 @@ HTML = '''
 <head>
     <meta charset="UTF-8">
     <title>Türkçe Ses/Video'dan Metne Çeviri</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f7f7f7; }
-        .container { background: #fff; padding: 30px; border-radius: 8px; max-width: 500px; margin: auto; box-shadow: 0 2px 8px #0001; }
-        h1 { text-align: center; }
-        input[type=file], button { width: 100%; margin: 10px 0; }
-        textarea { width: 100%; height: 200px; margin-top: 10px; }
-        .download { margin-top: 10px; text-align: right; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: #2563eb;
+            color: #fff;
+            padding: 32px 0 18px 0;
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px #0001;
+        }
+        .container {
+            background: #fff;
+            padding: 32px 24px 24px 24px;
+            border-radius: 14px;
+            max-width: 420px;
+            margin: 40px auto 24px auto;
+            box-shadow: 0 4px 24px #0002;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        input[type=file] {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f3f4f6;
+        }
+        button {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 4px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        textarea {
+            width: 100%;
+            height: 180px;
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            font-size: 1rem;
+            resize: vertical;
+        }
+        .download {
+            margin-top: 10px;
+            text-align: right;
+        }
+        .error {
+            color: #dc2626;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                max-width: 98vw;
+                margin: 16px 1vw 16px 1vw;
+                padding: 18px 6vw 18px 6vw;
+            }
+            header {
+                font-size: 1.3rem;
+                padding: 18px 0 10px 0;
+            }
+        }
+        footer {
+            margin-top: auto;
+            background: #f1f5f9;
+            color: #64748b;
+            text-align: center;
+            padding: 18px 0 12px 0;
+            font-size: 1rem;
+            letter-spacing: 0.2px;
+        }
+        .footer-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Türkçe Ses/Video'dan Metne Çeviri</h1>
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="audio/*,video/*" required>
-        <button type="submit">Yükle ve Çevir</button>
-    </form>
-    {% if text %}
-        <textarea readonly>{{ text }}</textarea>
-        <div class="download">
-            <form method="post" action="/download">
-                <input type="hidden" name="text" value="{{ text|tojson|safe }}">
-                <button type="submit">Metni İndir</button>
-            </form>
-        </div>
-    {% elif error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
-</div>
+    <header>
+        Türkçe Ses/Video'dan Metne Çeviri
+    </header>
+    <div class="container">
+        <form method="post" enctype="multipart/form-data">
+            <label for="file"><b>Ses veya video dosyası yükle:</b></label>
+            <input type="file" name="file" id="file" accept="audio/*,video/*" required>
+            <button type="submit">Yükle ve Çevir</button>
+        </form>
+        {% if text %}
+            <label for="transcript"><b>Çıktı (Türkçe Transkript):</b></label>
+            <textarea id="transcript" readonly>{{ text }}</textarea>
+            <div class="download">
+                <form method="post" action="/download">
+                    <input type="hidden" name="text" value="{{ text|tojson|safe }}">
+                    <button type="submit">Metni İndir</button>
+                </form>
+            </div>
+        {% elif error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+    <footer>
+        &copy; 2024 Türkçe Transkript &middot; <a class="footer-link" href="https://railway.app/" target="_blank">Railway ile Barındırıldı</a>
+    </footer>
 </body>
 </html>
 '''
